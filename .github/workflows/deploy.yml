@@ -111,8 +111,6 @@ jobs:
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4
-      with:
-        path: _site  
 
     - name: Create deployment status issue
       run: |
