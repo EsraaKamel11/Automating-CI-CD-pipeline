@@ -94,35 +94,8 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: _site
-
+    
   # Deploy Job
-  deploy:
-    # Ensure the deploy job only runs if the build job succeeds
-    needs: build
-    runs-on: ubuntu-latest
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      # Download the build artifact created by the build job
-      - name: Download Build Artifact
-        uses: actions/download-pages-artifact@v3
-
-      # Deploy the site to GitHub Pages
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v2
-
-       # Create an issue to track the deployment
-      - name: Create Deployment Issue
-       run: |
-         gh issue create --title "$(date) - Deployment: ${{ job.status }}" \
-         --body "URL: https://github.com/EsraaKamel11/Automating-CI-CD-pipeline"
-       env:
-         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-    # Deploy Job
   deploy:
     # Ensure the deploy job only runs if the build job succeeds
     needs: build
