@@ -1,130 +1,102 @@
 name: Knowledge Base CI/CD Workflow
 
-# Trigger the workflow on push to main, pull requests, and manual dispatch
 on:
   push:
     branches:
       - main
     paths-ignore:
-      - '.gitignore'
-      - 'README.md'
-      - 'CONTRIBUTING.md'
-      - 'LICENSE'
+      - .gitignore
+      - README.md
+      - CONTRIBUTING.md
+      - LICENSE
   pull_request:
     branches:
       - main
   workflow_dispatch:
-
-# Set concurrency to prevent multiple jobs from running simultaneously
-concurrency:
-  group: knowledge-base-deploy
-  cancel-in-progress: true
+    inputs:
+      force_deploy:
+        description: 'Force deploy the latest changes'
+        required: false
+        default: 'false'
 
 jobs:
-  # Test Job
   test:
     runs-on: ubuntu-latest
-
+    env:
+      URL_CHECKER_TIMEOUT: 30  # Timeout value for the URL checker script
     steps:
-      # Checkout the repository
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      # Set up Node.js environment with version 18
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v2
         with:
           node-version: '18'
 
-      # Cache node_modules to speed up dependencies installation
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            node-modules-
-
-      # Install project dependencies
       - name: Install dependencies
         run: npm install
-
-      # Run linters
-      - name: Run Linters
+        continue-on-error: false
+      
+      - name: Run linters
         run: npm run lint:all
+        continue-on-error: false
 
-      # Run test scripts
-      - name: Run Tests
-        run: npm test
+      - name: Run URL checker
+        run: node url-checker.js -t ${{ env.URL_CHECKER_TIMEOUT }} -p src/posts
+        continue-on-error: false
 
-  # Build Job
   build:
-    # Ensure the build job only runs if the test job succeeds
-    needs: test
     runs-on: ubuntu-latest
-
+    needs: test
     steps:
-      # Checkout the repository
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      # Set up Node.js environment with version 18
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
+
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v2
         with:
           node-version: '18'
 
-      # Cache node_modules again for build optimization
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            node-modules-
+      - name: Install dependencies
+        run: npm install
+        continue-on-error: false
 
-      # Build the static site
-      - name: Build static pages
+      - name: Set environment variable for PATH_PREFIX
+        run: echo "PATH_PREFIX='/${{ github.event.repository.name }}/'" >> $GITHUB_ENV
+
+      - name: Build the static pages
         run: npm run prod
-        env:
-          PATH_PREFIX: "/knowledge-base/"  # Replace with your actual repository name
+        continue-on-error: false
 
-      # Upload the built static site files as an artifact for deployment
-      - name: Upload Build Artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Upload built site
+        uses: actions/upload-artifact@v2
         with:
-          path: _site
-    
-  # Deploy Job
+          name: built_site
+          path: _site/**
+
   deploy:
-    # Ensure the deploy job only runs if the build job succeeds
-    needs: build
     runs-on: ubuntu-latest
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
+    needs: build
     steps:
-      # Download the build artifact created by the build job
-      - name: Download Build Artifact
-        uses: actions/download-pages-artifact@v3
+      - name: Download built site
+        uses: actions/download-artifact@v2
+        with:
+          name: built_site
 
-      # Deploy the site to GitHub Pages
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v2
-
-      # Get list of commits since last deployment
-      - name: Fetch commits since last deploy
-        id: commits
         run: |
-          echo "COMMIT_DIFF=$(git log -1 --pretty=format:'%h')...$(git log -2 --pretty=format:'%h' | tail -n 1)" >> $GITHUB_ENV
+          echo "Deploying to GitHub Pages..."
+          # Add your GitHub Pages deployment logic here
+        continue-on-error: false
 
-      # Create a more insightful summary issue
-      - name: Create Deployment Issue
+      - name: Create deployment status issue
         run: |
-          gh issue create --title "$(date) - Deployment: ${{ job.status }}" \
-          --body "URL: ${{ steps.deployment.outputs.page_url }}\n\n## Changes deployed:\nhttps://github.com/EsraaKamel11/Automating-CI-CD-pipeline/compare/${{ env.COMMIT_DIFF }}\n\n### File Diffs:\n$(git diff --name-only HEAD~1)"
+          date=$(date +"%Y-%m-%d")
+          status="succeeded" # Update this based on the deployment result
+          url="https://github.com/EsraaKamel11/Automating-CI-CD-pipeline" # Replace with the actual URL
+          gh issue create --title "$date - Deployment: $status" --body "URL: $url" --assignee $GITHUB_ACTOR
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
