@@ -87,36 +87,35 @@ jobs:
         path: _site/**
 
 
-
-  deploy:
+deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Setup Pages
-      uses: actions/configure-pages@v5
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
-    - name: Download built site
-      uses: actions/download-artifact@v4
-      with:
-        name: built_site
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload entire repository
+          path: "."
 
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
-    - name: Create deployment status issue
-      run: |
-        date=$(date +"%Y-%m-%d")
-        status="succeeded" # Update this based on the deployment result
-        url="https://github.com/EsraaKamel11/Automating-CI-CD-pipeline" # Replace with the actual URL
-        gh issue create --title "$date - Deployment: $status" --body "URL: $url" --assignee $GITHUB_ACTOR
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create deployment status issue
+        run: |
+          date=$(date +"%Y-%m-%d")
+          status="succeeded" # Update this based on the deployment result
+          url="https://github.com/EsraaKamel11/Automating-CI-CD-pipeline" 
+          gh issue create --title "$date - Deployment: $status" --body "URL: $url" --assignee $GITHUB_ACTOR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
