@@ -54,9 +54,7 @@
     "node": "^18.12",
     "npm": "^9.2",
     "yarn": "please-use-npm"
-  }
-}
-{
+  },
   "scripts": {
     "test": "echo \"No tests specified\" && exit 0"
   }
