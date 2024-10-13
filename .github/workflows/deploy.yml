@@ -130,7 +130,7 @@ jobs:
         run: |
           DATE=$(date +'%Y-%m-%d')
           STATUS="succeeded"
-          URL="https://your-knowledge-base-url.com" # Replace with your URL
+          URL="https://github.com/EsraaKamel11/Automating-CI-CD-pipeline" 
           ISSUE_TITLE="${DATE} - Deployment: ${STATUS}"
           ISSUE_BODY="URL: ${URL}"
           
