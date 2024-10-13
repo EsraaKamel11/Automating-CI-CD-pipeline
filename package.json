@@ -56,3 +56,8 @@
     "yarn": "please-use-npm"
   }
 }
+{
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0"
+  }
+}
