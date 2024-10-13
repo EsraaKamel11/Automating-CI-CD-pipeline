@@ -86,11 +86,7 @@ jobs:
         name: built_site
         path: _site/**
         
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-      
+  deploy: 
     runs-on: ubuntu-latest  
     needs: build
     permissions:
