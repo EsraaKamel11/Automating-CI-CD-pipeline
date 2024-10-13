@@ -97,14 +97,14 @@ jobs:
       - name: Deploy to GitHub Pages
         run: |
           echo "Deploying to GitHub Pages..."
-          # Add your GitHub Pages deployment logic here
+          npx gh-pages -d _site 
         continue-on-error: false
 
       - name: Create deployment status issue
         run: |
           date=$(date +"%Y-%m-%d")
           status="succeeded" # Update this based on the deployment result
-          url="https://github.com/EsraaKamel11/Automating-CI-CD-pipeline" # Replace with the actual URL
+          url="https://github.com/EsraaKamel11/Automating-CI-CD-pipeline" 
           gh issue create --title "$date - Deployment: $status" --body "URL: $url" --assignee $GITHUB_ACTOR
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
