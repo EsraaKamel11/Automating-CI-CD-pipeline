@@ -36,7 +36,10 @@ jobs:
       - name: Install dependencies
         run: npm install
         continue-on-error: false
-      
+
+      - name: Install gh-pages
+        run: npm install gh-pages --save-dev
+
       - name: Run linters
         run: npm run lint:all
         continue-on-error: false
