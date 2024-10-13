@@ -49,33 +49,34 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: Setup GitHub Pages
-        uses: actions/configure-pages@v4
+    - name: Setup GitHub Pages
+      uses: actions/configure-pages@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '18'
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
 
-      - name: Install dependencies
-        run: npm install
-        continue-on-error: false
+    - name: Install dependencies
+      run: npm install
+      continue-on-error: false
 
-      - name: Set environment variable for PATH_PREFIX
-        run: echo "PATH_PREFIX='/${{ github.event.repository.name }}/'" >> $GITHUB_ENV
+    - name: Set environment variable for PATH_PREFIX
+      run: echo "PATH_PREFIX='/${{ github.event.repository.name }}/'" >> $GITHUB_ENV
 
-      - name: Build the static pages
-        run: npm run prod
-        continue-on-error: false
+    - name: Build the static pages
+      run: npm run prod
+      continue-on-error: false
 
-      - name: Upload built site
-        uses: actions/upload-artifact@v2
-        with:
-          name: built_site
-          path: _site/**
+    - name: Upload built site
+      uses: actions/upload-artifact@v3  # Updated version
+      with:
+        name: built_site
+        path: _site/**
+
 
   deploy:
     runs-on: ubuntu-latest
