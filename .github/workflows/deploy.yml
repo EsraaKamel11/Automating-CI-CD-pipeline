@@ -1,0 +1,157 @@
+name: Knowledge Base CI/CD Workflow
+
+# Trigger the workflow on push to main, pull requests, and manual dispatch
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.gitignore'
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'LICENSE'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Set concurrency to prevent multiple jobs from running simultaneously
+concurrency:
+  group: knowledge-base-deploy
+  cancel-in-progress: true
+
+jobs:
+  # Test Job
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Set up Node.js environment with version 18
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      # Cache node_modules to speed up dependencies installation
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            node-modules-
+
+      # Install project dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Run linters
+      - name: Run Linters
+        run: npm run lint:all
+
+      # Run test scripts
+      - name: Run Tests
+        run: npm test
+
+  # Build Job
+  build:
+    # Ensure the build job only runs if the test job succeeds
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Set up Node.js environment with version 18
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      # Cache node_modules again for build optimization
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            node-modules-
+
+      # Build the static site
+      - name: Build static pages
+        run: npm run prod
+        env:
+          PATH_PREFIX: "/knowledge-base/"  # Replace with your actual repository name
+
+      # Upload the built static site files as an artifact for deployment
+      - name: Upload Build Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  # Deploy Job
+  deploy:
+    # Ensure the deploy job only runs if the build job succeeds
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      # Download the build artifact created by the build job
+      - name: Download Build Artifact
+        uses: actions/download-pages-artifact@v3
+
+      # Deploy the site to GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v2
+
+       # Create an issue to track the deployment
+      - name: Create Deployment Issue
+       run: |
+         gh issue create --title "$(date) - Deployment: ${{ job.status }}" \
+         --body "URL: https://github.com/EsraaKamel11/Automating-CI-CD-pipeline"
+       env:
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+    # Deploy Job
+  deploy:
+    # Ensure the deploy job only runs if the build job succeeds
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      # Download the build artifact created by the build job
+      - name: Download Build Artifact
+        uses: actions/download-pages-artifact@v3
+
+      # Deploy the site to GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v2
+
+      # Get list of commits since last deployment
+      - name: Fetch commits since last deploy
+        id: commits
+        run: |
+          echo "COMMIT_DIFF=$(git log -1 --pretty=format:'%h')...$(git log -2 --pretty=format:'%h' | tail -n 1)" >> $GITHUB_ENV
+
+      # Create a more insightful summary issue
+      - name: Create Deployment Issue
+        run: |
+          gh issue create --title "$(date) - Deployment: ${{ job.status }}" \
+          --body "URL: ${{ steps.deployment.outputs.page_url }}\n\n## Changes deployed:\nhttps://github.com/EsraaKamel11/Automating-CI-CD-pipeline/compare/${{ env.COMMIT_DIFF }}\n\n### File Diffs:\n$(git diff --name-only HEAD~1)"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
