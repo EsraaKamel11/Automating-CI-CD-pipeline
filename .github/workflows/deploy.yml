@@ -76,7 +76,7 @@ jobs:
       run: npm run prod
 
     - name: Upload built site
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: built_site
         path: _site/**
