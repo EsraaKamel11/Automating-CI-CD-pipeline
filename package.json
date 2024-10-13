@@ -5,7 +5,7 @@
   "main": ".eleventy.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/EsraaKameel11/sprucecss-eleventy-documentation-template.git"
+    "url": "https://github.com/your-username/sprucecss-eleventy-documentation-template.git"
   },
   "scripts": {
     "delete:dist": "del-cli --force _site",
@@ -60,8 +60,5 @@
     "npm": "^9.2",
     "yarn": "please-use-npm"
   },
-  "scripts": {
-    "test": "echo \"No tests specified\" && exit 0"
-  }
+  "test": "echo \"No tests specified\" && exit 0"
 }
-
