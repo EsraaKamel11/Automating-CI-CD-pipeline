@@ -26,12 +26,20 @@ jobs:
       URL_CHECKER_TIMEOUT: 30  # Timeout value for the URL checker script
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node_modules-
 
       - name: Install dependencies
         run: npm install
@@ -47,6 +55,7 @@ jobs:
       - name: Run URL checker
         run: node script/url-checker.js -t ${{ env.URL_CHECKER_TIMEOUT }} -d src/posts
         continue-on-error: false
+
 
   build:
     runs-on: ubuntu-latest
