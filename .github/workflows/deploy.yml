@@ -122,3 +122,19 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
+      - name: Install GitHub CLI
+        run: sudo apt-get install gh
+
+      - name: Authenticate GitHub CLI
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+      - name: Create deployment status issue
+        id: create_issue
+        run: |
+          date=$(date +'%Y-%m-%d')
+          status="succeeded"
+          if [[ "${{ job.status }}" != "success" ]]; then
+            status="failed"
+          fi
+          url="${{ steps.deployment.outputs.page_url }}"
+          gh issue create --title "$date - Deployment: $status" --body "URL: $url"
