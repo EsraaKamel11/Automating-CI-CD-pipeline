@@ -102,10 +102,11 @@ jobs:
           name: site-zip
           path: site.zip
 
-      - name: Upload the _site/ folder for GitHub Pages
+      - name: Upload static files as artifact
+        id: deployment
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '_site'
+          path: _site/
 
 
   deploy:
