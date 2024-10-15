@@ -90,12 +90,23 @@ jobs:
 
     - name: Build the static pages
       run: npm run prod
+      
+     # Zip the _site/ folder
+    - name: Zip the _site/ folder
+      run: zip -r site.zip _site
 
-    - name: Upload built site
+    # Upload the zipped _site/ folder as an artifact
+    - name: Upload the zipped _site/ folder
       uses: actions/upload-artifact@v4
       with:
-        name: built_site
-        path: _site/**
+        name: site-zip
+        path: site.zip
+
+    # Upload _site folder for GitHub Pages deployment
+    - name: Upload the _site/ folder for GitHub Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '_site'  # Folder to upload for GitHub Pages
         
   deploy: 
     runs-on: ubuntu-latest  
