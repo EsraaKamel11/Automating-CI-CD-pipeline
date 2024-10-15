@@ -108,9 +108,17 @@ jobs:
       with:
         path: '_site'  # Folder to upload for GitHub Pages
         
+  jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build  # Ensure that test and build jobs ran and succeeded
+
+    # Explicitly set the permissions for GITHUB_TOKEN
+    permissions:
+      contents: read
+      pages: write  # Required to deploy to GitHub Pages
+      id-token: write  # Required to authenticate with OIDC for deployment
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -128,9 +136,7 @@ jobs:
 
       # Step 3: Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v1  # Action to deploy to GitHub Pages
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/deploy-pages@v1  # Deploy to GitHub Pages
 
       # Step 4: Create a GitHub issue with deployment status using GitHub CLI
       - name: Create GitHub issue for deployment status
@@ -153,6 +159,3 @@ jobs:
 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Authenticate using GitHub token
-
-    # Step 5: Ensure the job fails if any step fails
-    continue-on-error: false
