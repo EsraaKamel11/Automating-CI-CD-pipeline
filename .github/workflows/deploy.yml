@@ -108,7 +108,7 @@ jobs:
       with:
         path: '_site'  # Folder to upload for GitHub Pages
         
-  jobs:
+  
   deploy:
     runs-on: ubuntu-latest
     needs: build  # Ensure that test and build jobs ran and succeeded
