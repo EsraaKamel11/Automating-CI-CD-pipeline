@@ -91,7 +91,7 @@ jobs:
         run: npm install
 
       - name: Build the static pages
-        run: npm run prod
+        run: npm run eleventy:prod
 
       - name: Verify _site folder exists
         run: ls -l _site
