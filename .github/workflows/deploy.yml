@@ -18,7 +18,11 @@ on:
         description: 'Force deploy the latest changes'
         required: false
         default: 'false'
-
+# Adding concurrency
+concurrency:
+  group: build-and-deploy-${{ github.ref }}  # Group name relevant to workflow and branch
+  cancel-in-progress: true  # Cancel previous runs if a new one is triggered
+  
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -56,7 +60,6 @@ jobs:
         run: node script/url-checker.js -t ${{ env.URL_CHECKER_TIMEOUT }} -d src/posts
         continue-on-error: false
 
-
   build:
     runs-on: ubuntu-latest
     needs: test
@@ -82,7 +85,7 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-node_modules-${{ hashFiles('package-lock.json') }}
           restore-keys: |
-              ${{ runner.os }}-node_modules-
+            ${{ runner.os }}-node_modules-
 
       - name: Install dependencies
         run: npm install
@@ -99,7 +102,6 @@ jobs:
         with:
           path: _site/
 
-
   deploy:
     environment:
       name: github-pages
@@ -110,6 +112,7 @@ jobs:
       contents: read
       pages: write
       id-token: write
+      issues: write  # Added permission for issues
 
     steps:
       - name: Checkout repository
@@ -126,7 +129,7 @@ jobs:
         run: sudo apt-get install gh
 
       - name: Authenticate GitHub CLI
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+        run: gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Create deployment status issue
         id: create_issue
@@ -137,4 +140,6 @@ jobs:
             status="failed"
           fi
           url="${{ steps.deployment.outputs.page_url }}"
+          echo "Creating issue with title: $date - Deployment: $status"
+          echo "URL: $url"
           gh issue create --title "$date - Deployment: $status" --body "URL: $url"
