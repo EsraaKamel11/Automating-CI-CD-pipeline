@@ -93,15 +93,6 @@ jobs:
       - name: Verify _site folder exists
         run: ls -l _site
 
-      - name: Zip the _site/ folder
-        run: zip -r site.zip _site
-
-      - name: Upload the zipped _site/ folder
-        uses: actions/upload-artifact@v4
-        with:
-          name: site-zip
-          path: site.zip
-
       - name: Upload static files as artifact
         id: deployment
         uses: actions/upload-pages-artifact@v3
@@ -123,15 +114,10 @@ jobs:
 
       - name: Download built site artifact
         uses: actions/download-artifact@v4
-        with:
-          name: site-zip
-          path: './'
-
-      - name: Unzip the built site
-        run: unzip site.zip
 
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v2  # Use v2 for stability
+        id: deployment
+        uses: actions/deploy-pages@v4
 
       - name: Create GitHub issue for deployment status
         id: create_issue
