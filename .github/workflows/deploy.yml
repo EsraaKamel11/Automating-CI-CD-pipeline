@@ -101,6 +101,9 @@ jobs:
 
 
   deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
     permissions:
@@ -119,17 +122,3 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Create GitHub issue for deployment status
-        id: create_issue
-        run: |
-          if [ "${{ job.status }}" == "success" ]; then
-            STATUS="succeeded"
-          else
-            STATUS="failed"
-          fi
-          TITLE="$(date +%Y-%m-%d) - Deployment: $STATUS"
-          BODY="URL: https://<your-username>.github.io/${{ github.repository }}"
-          gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
-          gh issue create --title "$TITLE" --body "$BODY"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
