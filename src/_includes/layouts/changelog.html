@@ -1,9 +1,10 @@
 {% extends "layouts/base.html" %}
+
 {% block content %}
     <div class="l-list" data-pagefind-body>
         {% set breadcrumbs = [{
             "title": title,
-            "url": page.url
+            "url": pathPrefix ~ page.url  // Use pathPrefix for the URL
         }] %}
         {% include "partials/post-heading.html" %}
         <div class="l-list__inner l-list__inner--changelog">
@@ -23,3 +24,4 @@
         </div>
     </div>
 {% endblock %}
+
