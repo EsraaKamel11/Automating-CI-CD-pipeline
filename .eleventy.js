@@ -16,7 +16,6 @@ const svgIconShortcode = require('./src/shortcodes/svg-icon.js');
 const { EleventyHtmlBasePlugin } = require("@11ty/eleventy");
 
 module.exports = config => {
-  // Add filters
   config.addFilter('dateFilter', dateFilter);
   config.addFilter('w3DateFilter', w3DateFilter);
   config.addFilter('parentFilter', parentFilter);
@@ -25,35 +24,29 @@ module.exports = config => {
     debugger;
   });
 
-  // Add plugins
   config.addPlugin(eleventyNavigationPlugin);
   config.addPlugin(syntaxHighlight);
   config.addPlugin(pluginTOC);
   config.addPlugin(EleventyHtmlBasePlugin);
 
-  // Passthrough copy for static assets
   config.addPassthroughCopy({ './src/robots.txt': '/robots.txt' });
   config.addPassthroughCopy('./src/img/**');
-  config.addPassthroughCopy('./src/css/**');  // Ensure CSS is passed through
+  config.addPassthroughCopy('./src/css/**');
   config.addPassthroughCopy('./src/js/**');
   config.addPassthroughCopy('./src/font/**');
 
-  // Add a collection for posts, sorted by navigation order
   config.addCollection('posts', collection => {
     const items = collection.getFilteredByGlob('./src/posts/**/posts/*.md');
     return items.sort((a, b) => a.data.eleventyNavigation.order - b.data.eleventyNavigation.order);
   });
 
-  // Add shortcodes
   config.addAsyncShortcode('svgIcon', svgIconShortcode);
   config.addAsyncShortcode('markdownRender', markdownRenderShortcode);
 
-  // Minify HTML in production
   if (isProduction) {
     config.addTransform('htmlmin', htmlMinTransform);
   }
 
-  // Configure markdown library
   const markdownLib = markdownIt({ html: true }).use(
     markdownItAnchor,
     {
@@ -62,17 +55,21 @@ module.exports = config => {
       permalinkSymbol: '#'
     }
   );
+
   config.setLibrary('md', markdownLib);
 
-  // Run Pagefind after Eleventy build
   config.on('eleventy.after', () => {
-    execSync(`npx pagefind --source _site --glob \"**/*.html\"`, { encoding: 'utf-8' });
+    execSync(`npx pagefind --source _site --glob \"**/*.html\"`, { encoding: 'utf-8' })
   });
 
-  // Set the path prefix for GitHub Pages or other subdirectory deployments
+  // Required for eleventy to run on GitHub Pages
+  // as the site URL will be https://<username>.github.io/<repo>/index.html
+  // when deploying to Pages, set the PATH_PREFIX environment variable to your 
+  // repository name
   const pathPrefix = process.env.PATH_PREFIX || '/';
+  console.log(`IMPORTANT: process.env.PATH_PREFIX=${process.env.PATH_PREFIX}`);
+  console.log(`IMPORTANT: pathPrefix=${pathPrefix}`);  
 
-  // Return the Eleventy config object
   return {
     markdownTemplateEngine: 'njk',
     dataTemplateEngine: 'njk',
@@ -82,6 +79,6 @@ module.exports = config => {
       output: '_site'
     },
     passthroughFileCopy: true,
-    pathPrefix: pathPrefix,  // Use pathPrefix for assets
+    pathPrefix: pathPrefix,
   };
 };
