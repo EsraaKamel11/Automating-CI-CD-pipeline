@@ -90,8 +90,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Set PATH_PREFIX
+        run: |
+          PP="/$(echo "${{ github.repository }}" | cut -d '/' -f2-)/"
+          echo "PATH_PREFIX=$PP" >> $GITHUB_ENV
+          
       - name: Build the static pages
-        run: npm run eleventy:prod
+        run: npm run prod
 
       - name: Verify _site folder exists
         run: ls -l _site
